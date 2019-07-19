@@ -1,0 +1,1 @@
+{'mp4_id': '99945958', 'mp4_download_url': 'https://p5-v1.xpccdn.com/099945958_main_xl.mp4', 'mp4_time': '0:15', 'mp4_background_image_url': 'https://p5-i1.xpccdn.com/099945958_iconl.jpeg', 'mp4_txt_brief': ' Hong Kong Circa 2017, City B-Roll'}
