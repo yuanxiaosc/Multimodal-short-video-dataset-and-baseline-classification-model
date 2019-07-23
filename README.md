@@ -45,6 +45,7 @@ Check the disk space occupied by the data. 检查数据占用的磁盘空间。
 ![](data_download_tools/xinpianchang/download_mp4_info.png)
 
 Check a type of video cover image and corresponding video description information. 检查某个类型的视频封面图以及对应的视频描述信息。
+
 ![](data_download_tools/xinpianchang/check_image.png)
 
 ### multimodal data statistics

@@ -133,11 +133,9 @@ def get_text_list_from_raw_txt_file(data_root="MP4_download"):
     return text_list
 
 
-def tfds_text_encoder_and_word_set(text_list):
+def tfds_text_encoder(text_list, filename_prefix='text_encoder', check_encoder=True):
     """
     TensorFlow dataset encoder
-    :param text_list:
-    :return:
     """
     tokenizer = tfds.features.text.Tokenizer()
     vocabulary_set = set()
@@ -151,13 +149,17 @@ def tfds_text_encoder_and_word_set(text_list):
 
     text_encoder = tfds.features.text.TokenTextEncoder(vocabulary_set)
 
-    example_text = 'I am the blogger of Wangjiang Artificial Think Tank.' \
-                   ' Welcome to https://yuanxiaosc.github.io./'
-    encoded_example = text_encoder.encode(example_text)
-    print("example_text:\t", example_text)
-    print("encoded_example:\t", encoded_example)
+    if check_encoder:
+        example_text = 'I am the blogger of Wangjiang Artificial Think Tank.' \
+                       ' Welcome to https://yuanxiaosc.github.io./'
+        encoded_example = text_encoder.encode(example_text)
+        decoded_example = text_encoder.decode(encoded_example)
+        print("example_text:\t", example_text)
+        print("encoded_example:\t", encoded_example)
+        print("decoded_example:\t", decoded_example)
 
-    return text_encoder, vocabulary_set
+    text_encoder.save_to_file(filename_prefix)
+    return text_encoder
 
 
 def multimodal_data_path_generator(data_root="MP4_download", shuffle_data=False):
@@ -205,11 +207,13 @@ def get_multimodal_data_path_list(data_root="MP4_download", shuffle_data=False):
     return multimodal_data_path_list
 
 
-def multimodal_encode_data_generator(data_root="MP4_download", shuffle_data=False, txt_maxlen=25,
+def multimodal_encode_data_generator(data_root="MP4_download", shuffle_data=False,
+                                     txt_encoder_filename_prefix='text_encoder', txt_maxlen=25,
                                      max_video_frame_number=None, video_width=640, video_height=360):
     """
     Multimodal Encode Data Generator
     :param data_root:  Original file root path
+    :param txt_encoder_filename_prefix:
     :param shuffle_data: Disrupt data order
     :param max_video_frame_number: None -> keep all video number, int -> max need video frame number
     :return: multimodal_encode_data_generator
@@ -225,8 +229,13 @@ def multimodal_encode_data_generator(data_root="MP4_download", shuffle_data=Fals
         print("encode_label", encode_label)
     """
 
-    text_list = get_text_list_from_raw_txt_file(data_root)
-    text_encoder, vocabulary_set = tfds_text_encoder_and_word_set(text_list)
+    if not os.path.exists(txt_encoder_filename_prefix + ".tokens"):
+        print("Create text_encoder from txt")
+        text_list = get_text_list_from_raw_txt_file(data_root)
+        text_encoder = tfds_text_encoder(text_list)
+    else:
+        print("TokenTextEncoder.load_from_file(txt_encoder_filename_prefix)")
+        text_encoder = tfds.features.text.TokenTextEncoder.load_from_file(txt_encoder_filename_prefix)
 
     def process_video(video_file_path, max_video_frame_number=None, video_width=640, video_height=360):
         videoCapture = cv2.VideoCapture(video_file_path)

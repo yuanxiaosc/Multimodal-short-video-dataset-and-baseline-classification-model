@@ -1,9 +1,9 @@
 import tensorflow as tf
 
 
-def create_text_baseline_model(txt_maxlen, vocab_size, embedding_dim=100, lstm_units=64, output_dim=50):
+def create_text_baseline_model(txt_max_len, vocab_size, embedding_dim=100, lstm_units=64, output_dim=50):
     text_model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(txt_maxlen)),
+        tf.keras.layers.Input(shape=(txt_max_len), name='text_data'),
         tf.keras.layers.Embedding(vocab_size, embedding_dim),
         tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(lstm_units, return_sequences=True)),
         tf.keras.layers.Flatten(),
@@ -14,7 +14,7 @@ def create_text_baseline_model(txt_maxlen, vocab_size, embedding_dim=100, lstm_u
 
 def create_image_baseline_model(image_height, image_width, image_channels=3, output_dim=50):
     image_model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(image_height, image_width, image_channels)),
+        tf.keras.layers.Input(shape=(image_height, image_width, image_channels), name='image_data'),
         tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
         tf.keras.layers.MaxPooling2D(2, 2),
         tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
@@ -50,7 +50,8 @@ def create_video_baseline_model(max_video_frame_number, video_height, video_widt
 
     model = tf.keras.models.Sequential(name="video_baseline_model")
     # Input
-    model.add(tf.keras.layers.Input(shape=(max_video_frame_number, video_height, video_width, video_channels)))
+    model.add(tf.keras.layers.Input(shape=(max_video_frame_number, video_height, video_width, video_channels),
+                                    name='video_data'))
 
     # Conv3D + MaxPooling3D
     model.add(get_con3d_block(filters=32, kernel_size=(3, 3, 3)))
@@ -83,7 +84,7 @@ def create_video_baseline_model(max_video_frame_number, video_height, video_widt
     return model
 
 
-def create_multimodal_baseline_model(label_number=31, txt_maxlen=20, text_vocab_size=15799, text_embedding_dim=100,
+def create_multimodal_baseline_model(label_number=31, txt_max_len=20, text_vocab_size=15799, text_embedding_dim=100,
                                      text_lstm_units=64, text_output_dim=50,
                                      image_height=270, image_width=480, image_channels=3, image_output_dim=50,
                                      max_video_frame_number=100, video_height=360, video_width=640, video_channels=3,
@@ -91,7 +92,7 @@ def create_multimodal_baseline_model(label_number=31, txt_maxlen=20, text_vocab_
     """
     Multimodal Baseline Model
     Text model parameters:
-    [ vocab_size, txt_maxlen, text_embedding_dim, text_lstm_units, text_output_dim]
+    [ vocab_size, txt_max_len, text_embedding_dim, text_lstm_units, text_output_dim]
 
     Image model parameters:
     [image_height, image_width, image_channels, image_output_dim]
@@ -101,12 +102,12 @@ def create_multimodal_baseline_model(label_number=31, txt_maxlen=20, text_vocab_
 
     label_number
     """
-    text_input = tf.keras.layers.Input(shape=(txt_maxlen), name='text')
-    image_input = tf.keras.layers.Input(shape=(image_height, image_width, image_channels), name='image')
+    text_input = tf.keras.layers.Input(shape=(txt_max_len), name='text_data')
+    image_input = tf.keras.layers.Input(shape=(image_height, image_width, image_channels), name='image_data')
     video_input = tf.keras.layers.Input(shape=(max_video_frame_number, video_height, video_width, video_channels),
-                                        name='video')
+                                        name='video_data')
 
-    text_model = create_text_baseline_model(txt_maxlen, text_vocab_size, text_embedding_dim, text_lstm_units,
+    text_model = create_text_baseline_model(txt_max_len, text_vocab_size, text_embedding_dim, text_lstm_units,
                                             text_output_dim)
     image_model = create_image_baseline_model(image_height, image_width, image_channels, image_output_dim)
     video_model = create_video_baseline_model(max_video_frame_number, video_height, video_width, video_channels,
@@ -119,7 +120,7 @@ def create_multimodal_baseline_model(label_number=31, txt_maxlen=20, text_vocab_
     multimodal_feature = tf.keras.layers.concatenate([text_feature, image_feature, video_feature], axis=-1)
 
     x = tf.keras.layers.Dense(100)(multimodal_feature)
-    label_predict = tf.keras.layers.Dense(label_number, activation='softmax', name='label_predict')(x)
+    label_predict = tf.keras.layers.Dense(label_number, activation='softmax', name='video_label')(x)
 
     multimodal_baseline_model = tf.keras.Model(inputs=[text_input, image_input, video_input], outputs=[label_predict])
     return multimodal_baseline_model
